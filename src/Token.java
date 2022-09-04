@@ -70,9 +70,11 @@ public class Token {
             Object firstHalf = toType(value.split(splitOperator)[0], "none");
             Object secondHalf = toType(value.split(splitOperator)[1], "none");
 
+            assert firstHalf != null;
             if (firstHalf.getClass() == java.lang.Integer.class) {
                 firstHalf = ((Integer) firstHalf).doubleValue();
             }
+            assert secondHalf != null;
             if (secondHalf.getClass() == java.lang.Integer.class) {
                 secondHalf = ((Integer) secondHalf).doubleValue();
             }
@@ -86,9 +88,25 @@ public class Token {
             Object returnValue;
 
             switch (splitOperator) {
-                case "&&" -> returnValue = (Boolean) firstHalf && (Boolean) secondHalf;
-                case "\\|\\|" -> returnValue = (Boolean) firstHalf || (Boolean) secondHalf;
-                case "\\+" -> returnValue = (Double) firstHalf + (Double) secondHalf;
+                case "&&" -> {
+                    assert firstHalf instanceof Boolean;
+                    assert secondHalf instanceof Boolean;
+                    returnValue = (Boolean) firstHalf && (Boolean) secondHalf;
+                }
+                case "\\|\\|" -> {
+                    assert firstHalf instanceof Boolean;
+                    assert secondHalf instanceof Boolean;
+                    returnValue = (Boolean) firstHalf || (Boolean) secondHalf;
+                }
+                case "\\+" -> {
+                    if (firstHalf instanceof String) {
+                        returnValue = (String) firstHalf + secondHalf;
+                    } else if (firstHalf instanceof Double && secondHalf instanceof Double) {
+                        returnValue = (Double) firstHalf + (Double) secondHalf;
+                    } else {
+                        return null;
+                    }
+                }
                 case "-" -> returnValue = (Double) firstHalf - (Double) secondHalf;
                 case "\\*" -> returnValue = (Double) firstHalf * (Double) secondHalf;
                 case "/" -> returnValue = (Double) firstHalf / (Double) secondHalf;
@@ -98,11 +116,14 @@ public class Token {
                 case "<=" -> returnValue = (Double) firstHalf <= (Double) secondHalf;
                 case ">=" -> returnValue = (Double) firstHalf >= (Double) secondHalf;
                 default -> returnValue = null;
+
             }
 
-            if (returnValue.getClass() == Double.class && returnValue.toString().endsWith(".0") || !returnValue.toString().contains(".")) {
+            if (returnValue instanceof Double && (returnValue.toString().endsWith(".0") || !returnValue.toString().contains("."))) {
                 return ((Double) returnValue).intValue();
             }
+
+            return returnValue;
         }
 
         if (value.matches("\\d*")) type = "int";
