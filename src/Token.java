@@ -24,6 +24,10 @@ public class Token {
 
     public static Object toType(String value, String type) {
 
+        if (value.startsWith("\"") && value.endsWith("\"")) {
+            type = "string";
+        }
+
         if (type.equals("none")) {
             if (Parser.variableNames.contains(value)) {
                 return Parser.variableValues.get(Parser.variableNames.indexOf(value));

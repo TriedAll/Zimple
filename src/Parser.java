@@ -59,7 +59,7 @@ public class Parser {
         tokenArray.add(new ArrayList<>());
         int level = 0;
         for (Token param : params) {
-            if (param.getValue().equals("#")) {
+            if (param.getValue().equals("~")) {
                 level += 1;
                 tokenArray.add(new ArrayList<>());
             } else {
