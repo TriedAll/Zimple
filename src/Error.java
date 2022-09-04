@@ -3,16 +3,14 @@ import java.util.ArrayList;
 public class Error {
 
 
-
     private static final ArrayList<String> errors = new ArrayList<>();
+
     static {
         errors.add("Execution complete.");
         errors.add("Something went wrong.");
         errors.add("Unrecognized error.");
-        errors.add("Invalid number of arguments.");
-        errors.add("File does not exist.");
-        errors.add("Invalid File extension.");
-        errors.add("Expected additional argument.");
+        errors.add("Invalid or inaccessible file.");
+        errors.add("Incorrect File Extension");
     }
 
     public static void send(int code) {
