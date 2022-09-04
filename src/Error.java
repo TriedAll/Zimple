@@ -11,6 +11,7 @@ public class Error {
         errors.add("Unrecognized error.");
         errors.add("Invalid or inaccessible file.");
         errors.add("Incorrect File Extension");
+        errors.add("Unexpected Character");
     }
 
     public static void send(int code) {

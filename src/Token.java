@@ -2,19 +2,10 @@ import java.util.Scanner;
 
 public class Token {
 
-    private String value;
+    private final String value;
     private final String type;
 
     Token(String value, String type) {
-        if (value.startsWith("\"") && value.endsWith("\"")) {
-            type = "string";
-            value = value.substring(1, value.length() - 1);
-        }
-        if (type.equals("") && value.matches("true|false")) {
-            type = "bool";
-        } else if (type.equals("string")) {
-            value = value.replace("\\n", "\n").replace("\\\\","\\").replace("\\t", "\t").replace("\\r", "\r");
-        }
         this.value = value;
         this.type = type;
     }
@@ -28,69 +19,100 @@ public class Token {
     }
 
     public Object toType() {
-        return toType(type, value);
+        return toType(value, type);
     }
 
-    public static Object toType(String type,String value) {
+    public static Object toType(String value, String type) {
 
-        if (type.equals("") && (value.equals("true") || value.equals("false"))) {
-         return Boolean.parseBoolean(value);
-        }
-
-        if (value.equals("in")) {
-            return new Scanner(System.in).nextLine();
-        }
-
-        if (!type.equals("string")) {
-            if (value.contains(">")) {
-                return (Double) toType("", value.split(">")[0]) > (Double) toType("", value.split(">")[1]);
-            }
-            if (value.contains("<")) {
-                return (Double) toType("", value.split("<")[0]) < (Double) toType("", value.split("<")[1]);
-            }
-            if (value.contains("==")) {
-                return toType("", value.split("==")[0]).equals(toType("", value.split("==")[1]));
-            }
-            if (value.contains("&&")) {
-                return (Boolean)toType("", value.split("&&")[0]) && (Boolean) (toType("", value.split("&&")[1]));
-            }
-            if (value.contains("||")) {
-                return (Boolean)toType("", value.split("\\|\\|")[0]) || (Boolean) (toType("", value.split("\\|\\|")[1]));
-            }
-            if (value.contains(">=")) {
-                return (Double)toType("", value.split(">=")[0]) >= (Double)toType("", value.split(">=")[1]);
-            }
-            if (value.contains("<=")) {
-                return (Double) toType("", value.split("<=")[0]) <= (Double) toType("", value.split("<=")[1]);
-            }
-            if (value.contains("+")) {
-                return (Double) toType("", value.split("\\+")[0]) + (Double) toType("", value.split("\\+")[1]);
-            }
-            if (value.contains("*")) {
-                return (Double) toType("", value.split("\\*")[0]) * (Double) toType("", value.split("\\*")[1]);
-            }
-            if (value.contains("/")) {
-                return (Double) toType("", value.split("/")[0]) / (Double) toType("", value.split("/")[1]);
-            }
-            if (value.contains("-")) {
-                return (Double) toType("", value.split("-")[0]) - (Double) toType("", value.split("-")[1]);
-            }
-            if (value.contains("^")) {
-                return Math.pow((Double) toType("", value.split("\\^")[0]),(Double) toType("", value.split("\\^")[1]));
-            }
-        }
-
-        if (type.equals("")) {
+        if (type.equals("none")) {
             if (Parser.variableNames.contains(value)) {
                 return Parser.variableValues.get(Parser.variableNames.indexOf(value));
             }
         }
 
-        if (value.matches("\\d*") && !type.equals("string")) type = "int";
+        if (value.equals("in")) {
+            return new Scanner(System.in).nextLine();
+        }
+        boolean shouldSplit = false;
+        String splitOperator = null;
+
+        String[] boolOperators = new String[]{"&&", "\\|\\|"};
+        String[] intOperators = new String[]{"+", "-", "*", "/", ">", "<", "<=", ">=", "^"};
+
+        if (type.equals("none")) {
+            for (String operator : boolOperators) {
+                if (value.contains(operator)) {
+                    shouldSplit = true;
+                    splitOperator = operator;
+                    break;
+                }
+            }
+            for (String operator : intOperators) {
+                if (value.contains(operator)) {
+                    shouldSplit = true;
+                    splitOperator = operator;
+                }
+            }
+        }
+         if (value.contains("==") || value.contains("!=")) {
+            shouldSplit = true;
+            if (value.contains("==")) {
+                splitOperator = "==";
+            } else {
+                splitOperator = "!=";
+            }
+        }
+
+        if (shouldSplit) {
+            if (splitOperator.equals("+") || splitOperator.equals("*") || splitOperator.equals("^")) {
+                splitOperator = "\\" + splitOperator;
+            }
+            Object firstHalf = toType(value.split(splitOperator)[0], "none");
+            Object secondHalf = toType(value.split(splitOperator)[1], "none");
+
+            if (firstHalf.getClass() == java.lang.Integer.class) {
+                firstHalf = ((Integer) firstHalf).doubleValue();
+            }
+            if (secondHalf.getClass() == java.lang.Integer.class) {
+                secondHalf = ((Integer) secondHalf).doubleValue();
+            }
+
+            if (splitOperator.equals("==")) {
+                return firstHalf.equals(secondHalf);
+            } else if (splitOperator.equals("!=")) {
+                return !firstHalf.equals(secondHalf);
+            }
+
+            Object returnValue;
+
+            switch (splitOperator) {
+                case "&&" -> returnValue = (Boolean) firstHalf && (Boolean) secondHalf;
+                case "\\|\\|" -> returnValue = (Boolean) firstHalf || (Boolean) secondHalf;
+                case "\\+" -> returnValue = (Double) firstHalf + (Double) secondHalf;
+                case "-" -> returnValue = (Double) firstHalf - (Double) secondHalf;
+                case "\\*" -> returnValue = (Double) firstHalf * (Double) secondHalf;
+                case "/" -> returnValue = (Double) firstHalf / (Double) secondHalf;
+                case "\\^" -> returnValue = Math.pow((Double) firstHalf, (Double) secondHalf);
+                case "<" -> returnValue = (Double) firstHalf < (Double) secondHalf;
+                case ">" -> returnValue = (Double) firstHalf > (Double) secondHalf;
+                case "<=" -> returnValue = (Double) firstHalf <= (Double) secondHalf;
+                case ">=" -> returnValue = (Double) firstHalf >= (Double) secondHalf;
+                default -> returnValue = null;
+            }
+
+            if (returnValue.getClass() == Double.class && returnValue.toString().endsWith(".0") || !returnValue.toString().contains(".")) {
+                return ((Double) returnValue).intValue();
+            }
+        }
+
+        if (value.matches("\\d*")) type = "int";
+
+        if (type.equals("int") && (value.endsWith(".0") || !value.contains("."))) return Integer.parseInt(value);
+        if (value.matches("true|false")) return Boolean.parseBoolean(value);
 
         return switch (type) {
             case "int" -> Double.parseDouble(value);
-            case "string" -> value;
+            case "string" -> value.substring(1, value.length() - 1);
             case "bool" -> Boolean.parseBoolean(value);
             default -> null;
         };
@@ -103,9 +125,5 @@ public class Token {
         } else {
             return value;
         }
-    }
-
-    public void setValue(String value) {
-        this.value = value;
     }
 }

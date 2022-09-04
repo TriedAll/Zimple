@@ -2,7 +2,7 @@ import java.io.File;
 
 public class Main {
 
-    private static final String VERSION = "0.0.2";
+    private static final String VERSION = "0.0.3";
     private static final String PROGRAM_NAME = "Zimple";
 
     public static void main(String[] args) {

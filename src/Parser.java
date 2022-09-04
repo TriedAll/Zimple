@@ -1,7 +1,6 @@
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Parser {
 
@@ -43,32 +42,12 @@ public class Parser {
     }
 
     public static void var(Token[] args) {
-        if (args[1].getValue().equals("=") && args[0].getType().equals("")) {
-            if (!variableNames.contains(args[0].getValue())) {
-                variableNames.add(args[0].getValue());
-                if (args[2].getValue().equals("in")) {
-                    args[2].setValue(new Scanner(System.in).nextLine());
-                } else {
-                    variableValues.add(args[2].toType());
-                }
+        if (args[0].getType().equals("none") && args[1].getValue().equals("=")) {
+            if (variableNames.contains(args[0].getValue())) {
+                variableValues.set(variableNames.indexOf(args[0].getValue()), args[2].toType());
             } else {
-                if (args[2].getValue().equals("in")) {
-                    Object value = variableValues.get(variableNames.indexOf(args[0].getValue()));
-                    Object varValue;
-                    Scanner scanner = new Scanner(System.in);
-                    if (value.getClass()== Double.class) {
-                        varValue = Integer.parseInt(new Scanner(System.in).nextLine());
-                    } else if (value.getClass()==String.class) {
-                        varValue = scanner.nextLine();
-                    } else if (value.getClass() == Boolean.class) {
-                        varValue = scanner.nextBoolean();
-                    } else {
-                        varValue = null;
-                    }
-                    variableValues.set(variableNames.indexOf(args[0].getValue()), varValue);
-                } else {
-                    variableValues.set(variableNames.indexOf(args[0].getValue()), args[2].toType());
-                }
+                variableNames.add(args[0].getValue());
+                variableValues.add(args[2].toType());
             }
         }
     }
@@ -106,8 +85,10 @@ public class Parser {
                 tokenArray.get(level).add(param);
             }
         }
-        while (args[0].toType().equals(true)) {
-            tokenArray.forEach(tokens -> parseStatement(tokens.toArray(new Token[0])));
+        while (args[0].toType() == Boolean.TRUE) {
+            tokenArray.forEach(tokens -> {
+                parseStatement(tokens.toArray(new Token[0]));
+            });
         }
     }
 
