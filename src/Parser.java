@@ -86,9 +86,7 @@ public class Parser {
             }
         }
         while (args[0].toType() == Boolean.TRUE) {
-            tokenArray.forEach(tokens -> {
-                parseStatement(tokens.toArray(new Token[0]));
-            });
+            tokenArray.forEach(tokens -> parseStatement(tokens.toArray(new Token[0])));
         }
     }
 
